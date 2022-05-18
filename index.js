@@ -1,6 +1,8 @@
 const express = require('express')
 const app = express()
 
+app.use(express.json())
+
 let persons = [
   {
     "id": 1,
@@ -56,6 +58,44 @@ app.delete('/api/person/:id', (request, response) => {
 
   response.status(204).end()
 })
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+
+const badRequest = (message) => {
+  return response.status(400).json({
+    error: message
+  })
+}
+
+app.post('/api/person', (request, response) => {
+  const person = request.body
+  console.log(person)
+
+  if (!person.name) {
+    let error = "no name was given"
+    return badRequest(error)
+  }
+
+  if (!person.id) {
+    let error = "no id was given"
+    return badRequest(error)
+  }
+
+  if (persons.find(p => p.name === person.name)) {
+    let error = "name must be unique"
+    return badRequest(error)
+  }
+
+  person.id = getRandomInt(Number.MAX_SAFE_INTEGER)
+
+  persons = persons.concat(person)
+
+  response.json(person)
+})
+
 
 const PORT = 3001
 app.listen(PORT, () => {
