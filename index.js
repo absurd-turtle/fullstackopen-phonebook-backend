@@ -1,9 +1,11 @@
 const express = require('express')
 var morgan = require('morgan')
 const app = express()
+const cors = require('cors')
 
 app.use(express.json())
 app.use(morgan('tiny'))
+app.use(cors())
 
 let persons = [
   {
@@ -65,41 +67,40 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-
-const badRequest = (message) => {
-  return response.status(400).json({
-    error: message
-  })
-}
-
 app.post('/api/person', (request, response) => {
   const person = request.body
   console.log(person)
 
   if (!person.name) {
     let error = "no name was given"
-    return badRequest(error)
+    return response.status(400).json({
+      error
+    })
   }
 
-  if (!person.id) {
-    let error = "no id was given"
-    return badRequest(error)
+  if (!person.number) {
+    let error = "no number was given"
+    return response.status(400).json({
+      error
+    })
   }
 
   if (persons.find(p => p.name === person.name)) {
     let error = "name must be unique"
-    return badRequest(error)
+    return response.status(400).json({
+      error
+    })
   }
 
   person.id = getRandomInt(Number.MAX_SAFE_INTEGER)
 
   persons = persons.concat(person)
 
-  response.json(person)
+  return response.json(person)
 })
 
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
