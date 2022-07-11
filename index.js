@@ -32,7 +32,7 @@ app.get('/api/info', (request, response) => {
   })
 })
 
-app.get('/api/person/:id', (request, response, next) => {
+app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id)
     .then(person => {
       if (person) {
@@ -44,7 +44,7 @@ app.get('/api/person/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
-app.delete('/api/person/:id', (request, response, next) => {
+app.delete('/api/persons/:id', async (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then(() => {
       response.status(204).end()
@@ -52,21 +52,28 @@ app.delete('/api/person/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
-app.post('/api/person', (request, response) => {
+app.post('/api/persons', (request, response) => {
   const body = request.body
-  console.log(body)
 
   if (body.name === undefined || body.number === undefined) {
     return response.status(400).json({ error: 'attribute missing' })
   }
 
-  const person = new Person({
-    name: body.name,
-    number: body.number
-  })
+  let person
+  Person.exists({ name: body.name }).then(res => {
+    if (res) {
+      return response.status(422).json({ error: 'name must be unique' })
+    }
+    else {
+      person = new Person({
+        name: body.name,
+        number: body.number
+      })
 
-  person.save().then(savedPerson => {
-    return response.json(savedPerson)
+      person.save().then(savedPerson => {
+        return response.json(savedPerson)
+      })
+    }
   })
 })
 const unknownEndpoint = (request, response) => {
